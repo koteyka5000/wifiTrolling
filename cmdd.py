@@ -93,6 +93,15 @@ def connect(command, *args):  # Обработка команд
         inputText.focus()
         return ''
 
+    elif command == 'test':  # Для различных тестирований
+        try:
+            one = args[0]
+            two = args[1]
+        except Exception:
+            return 'Err'
+        print(f'{one}; {two} / {command}')
+        return one, two
+
     elif command == 'wifi':
         try:
             user = 'uff'      # Пользователь
