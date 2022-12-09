@@ -17,7 +17,7 @@ if isConnect:
     s = socket(AF_INET, SOCK_STREAM)  # Создается сокет протокола TCP
     s.bind(('localhost', PORT))  # Присваиваем ему порт 10000
     s.listen(10)  # Максимальное количество одновременных запросов
-    print(f'Запрос на соединение\nПорт: {PORT}\nАдрес: {HOST}')
+    print(f'{Fore.CYAN}Запрос на соединение\nПорт: {PORT}\nАдрес: {HOST}')
     client, addr = s.accept()  # акцептим запрос на соединение
 
 
@@ -100,10 +100,7 @@ def connect(command, *args):  # Обработка команд
             time = args[1]    # Время, на которое отключиться wifi
             wait = args[2]    # Сколько ждать перед отключение wifi
         except Exception:     # Пример:     wifi off 2 0
-            return 'ERR: Синтаксис'
-
-        if user != 'dima': # Проверяем пользователя (Он один)
-            return f'{user} не найден'
+            return 'ERR: Синтаксис Пример: wifi off 2 0'
 
         if action == 'on': # Включить wifi
             send('on 0')
