@@ -1,7 +1,13 @@
-import time
 import tkinter as tk
-from socket import *
-isConnect = True
+from socket import socket, AF_INET, SOCK_STREAM
+from tkinter import messagebox as mb
+
+# Осуществлять выход в локальную сеть как сервер?
+isConnect = False
+
+# Время для анимации плавного вывода. По умолчанию 50
+TIME_TO_SCROLL = 25
+
 if isConnect:
     HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
     PORT = 10000  # Port to listen on (non-privileged ports are > 1023)
@@ -9,7 +15,7 @@ if isConnect:
     s = socket(AF_INET, SOCK_STREAM)  # Создается сокет протокола TCP
     s.bind(('localhost', PORT))  # Присваиваем ему порт 10000
     s.listen(10)  # Максимальное количество одновременных запросов
-
+    print(f'Запрос на соединение\nПорт: {PORT}\nАдрес: {HOST}')
     client, addr = s.accept()  # акцептим запрос на соединение
 
 
@@ -30,14 +36,20 @@ outputText.place(x=20, y=100)
 inputText = tk.Entry(root, textvariable=inputTextVar, width=50)
 inputText.place(x=20, y=30)
 
+COMMANDS_WIFI = ('wifi',)
 
 def run(commandIn):  # Распределитель команд если не kill
     command = commandIn.split()
     command, *args = command
-    if command == 'kill':
-        kill(1)
-    else:
-        return connect(command, *args)
+    if command in COMMANDS_WIFI and isConnect == False: # Проверяем, есть ли подключение для особых команд
+        return 'ERR: Для данной команды необходин доступ в localhost'
+
+    if command == 'kill':  # Принудительно закрываем приложение
+        if isConnect: # Если подключались к сети
+            s.close() # Закрываем соединение
+        kill(1)       # Закрываем приложение
+
+    return connect(command, *args)  # Выполняем команду
 
 
 def connect(command, *args):  # Обработка команд
@@ -71,26 +83,32 @@ def connect(command, *args):  # Обработка команд
         outputText.configure(state='normal')
         outputText.delete(1.0, tk.END)
         outputText.configure(state='disabled')
+        inputText.delete(0, tk.END) 
+        inputText.focus()
         return ''
 
     elif command == 'wifi':
         try:
-            user = args[0]
-            action = args[1]
-            time = args[2]
-            wait = args[3]
-        except Exception:
+            user = args[0]    # Пользователь
+            action = args[1]  # on / off
+            time = args[2]    # Время, на которое отключиться wifi
+            wait = args[3]    # Сколько ждать перед отключение wifi
+        except Exception:     # Пример: wifi dima off 2 0
             return 'ERR: Синтаксис'
-        if user != 'dima':
+
+        if user != 'dima': # Проверяем пользователя (Он один)
             return f'{user} не найден'
-        if action == 'on':
+
+        if action == 'on': # Включить wifi
             send('on 0')
             return f'WiFi user={user} enabled'
-        elif action == 'off':
-            root.after(int(wait)*1000)
-            print(f'Wait: {int(wait)*1000}')
-            send(f'off {time}')
+
+        elif action == 'off': # Отключить wifi
+            root.after(int(wait)*1000)       # Секунды -> миллисекунды
+            print(f'Wait: {int(wait)*1000}') # Выводим сколько ждать
+            send(f'off {time}')              # Посылаем запрос на отключение
             return f'WiFi user={user} disabled'
+
         return 'Что-то пошло не так'
 
     else:
@@ -125,7 +143,7 @@ def kill(event):  # Выход
 
 def beautifulPrint(text):  # Красивый вывод
     for letter in text:
-        root.after(50)
+        root.after(TIME_TO_SCROLL)
         write(letter)
         root.update()
     write('\n')
@@ -153,8 +171,12 @@ root.bind('<Escape>', kill)
 
 
 def on_closing():
-    if input('Уверен? Потом подключиться не получится') == "1":
+    if isConnect:
+        if mb.askyesno("Предупреждение", "После выхода связь с клиентом не получится восстановить\nВыйти?"):
+            root.destroy()
+    else:
         root.destroy()
+    
 
 
 root.protocol("WM_DELETE_WINDOW", on_closing)
