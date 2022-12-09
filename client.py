@@ -1,7 +1,8 @@
-from socket import *
+# Права администратора обязательны
+from socket import socket, AF_INET, SOCK_STREAM
 from os import system
 from time import sleep
-# Права администратора обязательны
+
 
 # > Настройки
 
@@ -22,7 +23,6 @@ while not succesfulConnected:
         pass
     else:
         succesfulConnected = True
-
     count += 1
 print('\n')
 
@@ -32,13 +32,6 @@ def enable():
 
 def disable():
     system(f'netsh interface set interface "{CONNECTION_TYPE}" disabled')
-
-def fix():
-    print(system(f'netstat -ano | findstr :{PORT}'))  # Ищем процесс, который использует наш порт
-    q = input('PID-->')  # Ввести PID процесса
-    system(f'taskkill -pid {q} /f')  # Завершаем этот процесс
-
-
 
 while True:
     tm = s.recv(1024)  # Принимаем не более 1024 байта данных
@@ -54,5 +47,3 @@ while True:
     elif command == 'e':
         s.close()  # Закрыть подключение
         exit()
-    elif command == 'fix':
-        fix()
