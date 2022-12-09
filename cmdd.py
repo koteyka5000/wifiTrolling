@@ -1,12 +1,14 @@
 import tkinter as tk
 from socket import socket, AF_INET, SOCK_STREAM
 from tkinter import messagebox as mb
+from colorama import init, Fore
+init(autoreset=False)
 
 # Осуществлять выход в локальную сеть как сервер?
 isConnect = False
 
 # Время для анимации плавного вывода. По умолчанию 50
-TIME_TO_SCROLL = 25
+TIME_TO_SCROLL = 50
 
 if isConnect:
     HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
@@ -41,6 +43,7 @@ COMMANDS_WIFI = ('wifi',)
 def run(commandIn):  # Распределитель команд если не kill
     command = commandIn.split()
     command, *args = command
+
     if command in COMMANDS_WIFI and isConnect == False: # Проверяем, есть ли подключение для особых команд
         return 'ERR: Для данной команды необходин доступ в localhost'
 
@@ -49,6 +52,9 @@ def run(commandIn):  # Распределитель команд если не k
             s.close() # Закрываем соединение
         kill(1)       # Закрываем приложение
 
+    if command[0] == '>':  # Ожидание перед выполнением команды (Beta)
+        root.after(int(command[1:]) * 1000)
+        command, *args = args
     return connect(command, *args)  # Выполняем команду
 
 
@@ -89,11 +95,11 @@ def connect(command, *args):  # Обработка команд
 
     elif command == 'wifi':
         try:
-            user = args[0]    # Пользователь
-            action = args[1]  # on / off
-            time = args[2]    # Время, на которое отключиться wifi
-            wait = args[3]    # Сколько ждать перед отключение wifi
-        except Exception:     # Пример: wifi dima off 2 0
+            user = 'uff'      # Пользователь
+            action = args[0]  # on / off
+            time = args[1]    # Время, на которое отключиться wifi
+            wait = args[2]    # Сколько ждать перед отключение wifi
+        except Exception:     # Пример:     wifi off 2 0
             return 'ERR: Синтаксис'
 
         if user != 'dima': # Проверяем пользователя (Он один)
@@ -173,8 +179,10 @@ root.bind('<Escape>', kill)
 def on_closing():
     if isConnect:
         if mb.askyesno("Предупреждение", "После выхода связь с клиентом не получится восстановить\nВыйти?"):
+            print(f'{Fore.RED}Отключение')
             root.destroy()
     else:
+        print(f'{Fore.RED}Отключение')
         root.destroy()
     
 
